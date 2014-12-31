@@ -69,6 +69,7 @@ public:
 		ID_GAMECUBEPAGE,
 		ID_WIIPAGE,
 		ID_PATHSPAGE,
+		ID_ADVANCEDPAGE,
 	};
 
 private:
@@ -77,7 +78,9 @@ private:
 		ID_CPUTHREAD = 1010,
 		ID_IDLESKIP,
 		ID_ENABLECHEATS,
+		ID_ENABLEOVERCLOCK,
 		ID_FRAMELIMIT,
+		ID_OVERCLOCK,
 
 		ID_CPUENGINE,
 		ID_DSPTHREAD,
@@ -151,6 +154,9 @@ private:
 	wxRadioBox* CPUEngine;
 	wxCheckBox* DSPThread;
 	wxCheckBox* _NTSCJ;
+	wxSlider* OCSlider;
+	wxStaticText* OCText;
+	wxCheckBox* EnableOC;
 
 
 	wxBoxSizer* sDisplayPage; // Display settings
@@ -247,6 +253,7 @@ private:
 	void UpdateGUI();
 	void OnClose(wxCloseEvent& event);
 
+	void UpdateCPUClock();
 	void CoreSettingsChanged(wxCommandEvent& event);
 
 	void DisplaySettingsChanged(wxCommandEvent& event);
