@@ -407,14 +407,13 @@ static bool Compare(T mem_value, T value, CompareType op)
   }
 }
 
-std::function<bool(u32)> CheatsManager::CreateMatchFunction(bool* success)
+std::function<bool(u32)> CheatsManager::CreateMatchFunction()
 {
   const QString text = m_match_value->text();
 
   if (text.isEmpty())
   {
     m_result_label->setText(tr("No search value entered."));
-    *success = false;
     return nullptr;
   }
 
@@ -472,7 +471,6 @@ std::function<bool(u32)> CheatsManager::CreateMatchFunction(bool* success)
     if (op != CompareType::Equal && op != CompareType::NotEqual)
     {
       m_result_label->setText(tr("String values can only be compared using equality."));
-      *success = false;
       return nullptr;
     }
 
@@ -505,12 +503,10 @@ std::function<bool(u32)> CheatsManager::CreateMatchFunction(bool* success)
   {
     m_result_label->setText(
         tr("Cannot interpret the given value.\nHave you chosen the right type?"));
-    *success = false;
     return nullptr;
   }
   else
   {
-    *success = true;
     return matches_func;
   }
 }
@@ -526,9 +522,8 @@ void CheatsManager::NewSearch()
     return;
   }
 
-  bool conversion_succeded;
-  std::function<bool(u32)> matches_func = CreateMatchFunction(&conversion_succeded);
-  if (!conversion_succeded)
+  std::function<bool(u32)> matches_func = CreateMatchFunction();
+  if (matches_func == nullptr)
     return;
 
   Core::RunAsCPUThread([&] {
@@ -553,9 +548,8 @@ void CheatsManager::NextSearch()
     return;
   }
 
-  bool conversion_succeded;
-  std::function<bool(u32)> matches_func = CreateMatchFunction(&conversion_succeded);
-  if (!conversion_succeded)
+  std::function<bool(u32)> matches_func = CreateMatchFunction();
+  if (matches_func == nullptr)
     return;
 
   Core::RunAsCPUThread([this, matches_func] {

@@ -50,7 +50,7 @@ private:
   void OnStateChanged(Core::State state);
 
   size_t GetTypeSize() const;
-  std::function<bool(u32)> CreateMatchFunction(bool* success);
+  std::function<bool(u32)> CreateMatchFunction();
 
   void Reset();
   void NewSearch();
