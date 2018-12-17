@@ -476,12 +476,10 @@ std::function<bool(u32)> CheatsManager::CreateMatchFunction()
 
     conversion_succeeded = true;
 
-    matches_func = [this, op](u32 addr) {
-      // This is probably slow to do every time but we can't capture
-      // the 'text' variable since it goes out of scope.
-      const QString lambda_text = m_match_value->text();
+    const QString lambda_text = m_match_value->text();
+    const QByteArray utf8_bytes = lambda_text.toUtf8();
 
-      const QByteArray utf8_bytes = lambda_text.toUtf8();
+    matches_func = [this, op, utf8_bytes](u32 addr) {
       bool is_equal = std::equal(utf8_bytes.cbegin(), utf8_bytes.cend(),
                                  reinterpret_cast<char*>(Memory::m_pRAM + addr - 0x80000000));
       switch (op)
