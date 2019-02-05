@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 
+#include <QAction>
 #include <QPainter>
 #include <QTimer>
 
@@ -106,6 +107,12 @@ void MappingIndicator::DrawCursor(ControllerEmu::Cursor& cursor)
   // Enable AA after drawing bounding box.
   p.setRenderHint(QPainter::Antialiasing, true);
   p.setRenderHint(QPainter::SmoothPixmapTransform, true);
+
+  if (is_calibrating)
+  {
+    DrawCalibration(p, raw_coord.x, raw_coord.y);
+    return;
+  }
 
   // Deadzone for Z (forward/backward):
   const double deadzone = cursor.numeric_settings[cursor.SETTING_DEADZONE]->GetValue();
@@ -215,6 +222,12 @@ void MappingIndicator::DrawReshapableInput(ControllerEmu::ReshapableInput& stick
   // Enable AA after drawing bounding box.
   p.setRenderHint(QPainter::Antialiasing, true);
   p.setRenderHint(QPainter::SmoothPixmapTransform, true);
+
+  if (is_calibrating)
+  {
+    DrawCalibration(p, raw_coord.x, raw_coord.y);
+    return;
+  }
 
   // Input gate. (i.e. the octagon shape)
   p.setPen(gate_pen_color);
@@ -362,4 +375,77 @@ void MappingIndicator::paintEvent(QPaintEvent*)
   default:
     break;
   }
+}
+
+void MappingIndicator::DrawCalibration(QPainter& p, double x, double y)
+{
+  auto& stick = *static_cast<ControllerEmu::ReshapableInput*>(m_group);
+
+  // Perform the actual calibration.
+  stick.UpdateCalibration(x, y);
+
+  // TODO: Ugly magic number used in a few places in this file.
+  const double scale = height() / 2.5;
+
+  // Stick position.
+  p.setPen(Qt::NoPen);
+  p.setBrush(ADJ_INPUT_COLOR);
+  p.drawEllipse(QPointF{x, y} * scale, INPUT_DOT_RADIUS, INPUT_DOT_RADIUS);
+
+  // Input shape.
+  p.setPen(INPUT_SHAPE_PEN);
+  p.setBrush(Qt::NoBrush);
+  p.drawPolygon(GetPolygonFromRadiusGetter(
+      [&stick](double ang) { return stick.GetInputRadiusAtAngle(ang); }, scale));
+
+  // We need to do this to reverse the Y-flip so text isn't broken.
+  p.resetTransform();
+  p.setPen(TEXT_COLOR);
+  auto text_rect = rect();
+  text_rect.setHeight(text_rect.height() / 2);
+  p.drawText(text_rect, Qt::AlignCenter, tr("ROTATE STICK\nNOW"));
+}
+
+CalibrationWidget::CalibrationWidget(ControllerEmu::ReshapableInput& input,
+                                     MappingIndicator& indicator)
+    : m_input(input), m_indicator(indicator)
+{
+  SetupActions();
+
+  setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+}
+
+void CalibrationWidget::SetupActions()
+{
+  const auto calibrate_action = new QAction(tr("Calibrate"), this);
+  const auto reset_action = new QAction(tr("Reset"), this);
+
+  connect(calibrate_action, &QAction::triggered, [this]() { StartCalibration(); });
+  connect(reset_action, &QAction::triggered, [this]() { m_input.SetCalibrationToDefault(); });
+
+  for (auto* action : actions())
+    removeAction(action);
+
+  addAction(calibrate_action);
+  addAction(reset_action);
+  setDefaultAction(calibrate_action);
+}
+
+void CalibrationWidget::StartCalibration()
+{
+  m_input.SetCalibrationToZero();
+  m_indicator.is_calibrating = true;
+
+  // Add an action to stop calibration
+  const auto done_action = new QAction(tr("Complete Calibration"), this);
+  connect(done_action, &QAction::triggered, [this]() {
+    m_indicator.is_calibrating = false;
+    SetupActions();
+  });
+
+  for (auto* action : actions())
+    removeAction(action);
+
+  addAction(done_action);
+  setDefaultAction(done_action);
 }
