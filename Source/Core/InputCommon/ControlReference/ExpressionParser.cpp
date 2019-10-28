@@ -136,6 +136,8 @@ Token Lexer::NextToken()
     return Token(TOK_GTHAN);
   case ',':
     return Token(TOK_COMMA);
+  case '^':
+    return Token(TOK_XOR);
   case '\'':
     return GetDelimitedLiteral();
   case '$':
@@ -277,6 +279,12 @@ public:
       // Eval and discard lhs:
       lhs->GetValue();
       return rhs->GetValue();
+    }
+    case TOK_XOR:
+    {
+      const auto lval = lhs->GetValue();
+      const auto rval = rhs->GetValue();
+      return std::max(std::min(1 - lval, rval), std::min(lval, 1 - rval));
     }
     default:
       assert(false);
@@ -465,7 +473,7 @@ public:
     if (Peek().type == TOK_EOF)
       return result;
 
-    return ParseResult::MakeErrorResult(Peek(), _trans("Expected EOF."));
+    return ParseResult::MakeErrorResult(Peek(), _trans("Expected end of expression."));
   }
 
 private:
@@ -621,12 +629,14 @@ private:
       return 3;
     case TOK_AND:
       return 4;
-    case TOK_OR:
+    case TOK_XOR:
       return 5;
-    case TOK_ASSIGN:
+    case TOK_OR:
       return 6;
-    case TOK_COMMA:
+    case TOK_ASSIGN:
       return 7;
+    case TOK_COMMA:
+      return 8;
     default:
       assert(false);
       return 0;
