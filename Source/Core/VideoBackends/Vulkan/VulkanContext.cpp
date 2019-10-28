@@ -8,10 +8,9 @@
 #include <array>
 #include <cstring>
 
-#if USE_OPENXR
 #define XR_USE_GRAPHICS_API_VULKAN
+#include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
-#endif
 
 #include "Common/Assert.h"
 #include "Common/CommonFuncs.h"
@@ -809,7 +808,6 @@ u32 VulkanContext::GetReadbackMemoryType(u32 bits, bool* is_coherent, bool* is_c
   return type_index;
 }
 
-#if USE_OPENXR
 std::unique_ptr<OpenXR::Session> VulkanContext::CreateOpenXRSession()
 {
   XrGraphicsBindingVulkanKHR graphics_binding{XR_TYPE_GRAPHICS_BINDING_VULKAN_KHR};
@@ -822,7 +820,6 @@ std::unique_ptr<OpenXR::Session> VulkanContext::CreateOpenXRSession()
   return OpenXR::CreateSession({"XR_KHR_vulkan_enable", "Vulkan not implemented"},
                                &graphics_binding, {});
 }
-#endif
 
 void VulkanContext::InitDriverDetails()
 {

@@ -4,11 +4,8 @@
 
 #pragma once
 
-#if USE_OPENXR
-
 #include <openxr/openxr.h>
 
-#include <array>
 #include <atomic>
 #include <memory>
 #include <optional>
@@ -16,7 +13,7 @@
 #include <thread>
 #include <vector>
 
-#include "Common/CommonTypes.h"
+#include <Common/CommonTypes.h>
 
 namespace Common
 {
@@ -129,5 +126,3 @@ std::unique_ptr<Session> CreateSession(const std::vector<std::string_view>& requ
                                        const std::vector<int64_t>& swapchain_formats);
 
 }  // namespace OpenXR
-
-#endif

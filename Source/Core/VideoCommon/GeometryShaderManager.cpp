@@ -51,7 +51,6 @@ void GeometryShaderManager::SetConstants()
 
     if (xfmem.projection.type == GX_PERSPECTIVE)
     {
-#if USE_OPENXR
       if (auto* const openxr_session = g_renderer->GetOpenXRSession())
       {
         Common::Matrix44 projection;
@@ -73,7 +72,6 @@ void GeometryShaderManager::SetConstants()
         }
       }
       else
-#endif
       {
         float offset = (g_ActiveConfig.iStereoDepth / 1000.0f) *
                        (g_ActiveConfig.iStereoDepthPercentage / 100.0f);
