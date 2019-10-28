@@ -89,8 +89,6 @@ add_library(common
   NandPaths.h
   Network.cpp
   Network.h
-  OpenXR.cpp
-  OpenXR.h
   PcapFile.cpp
   PcapFile.h
   PerformanceCounter.cpp
@@ -283,9 +281,4 @@ if(UNIX)
   endif()
 elseif(WIN32)
   target_link_libraries(common PRIVATE "-INCLUDE:enableCompatPatches")
-endif()
-
-if(USE_OPENXR)
-  target_link_libraries(common PUBLIC OpenXR::Loader)
-  target_compile_definitions(common PUBLIC "USE_OPENXR=1")
 endif()

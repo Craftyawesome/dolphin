@@ -71,7 +71,6 @@ public:
 
 private:
   void CheckForSwapChainChanges();
-  std::unique_ptr<OpenXR::Session> CreateOpenXRSession() override;
 
   StateCache m_state_cache;
 

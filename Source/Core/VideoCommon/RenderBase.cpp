@@ -33,7 +33,6 @@
 #include "Common/Flag.h"
 #include "Common/Logging/Log.h"
 #include "Common/MsgHandler.h"
-#include "Common/OpenXR.h"
 #include "Common/Profiler.h"
 #include "Common/StringUtil.h"
 #include "Common/Thread.h"
@@ -112,16 +111,11 @@ bool Renderer::Initialize()
   if (!m_post_processor->Initialize(m_backbuffer_format))
     return false;
 
-  CheckOpenXRState();
-
   return true;
 }
 
 void Renderer::Shutdown()
 {
-  m_openxr_session = {};
-  OpenXR::Shutdown();
-
   // First stop any framedumping, which might need to dump the last xfb frame. This process
   // can require additional graphics sub-systems so it needs to be done first
   ShutdownFrameDumping();
@@ -448,12 +442,6 @@ void Renderer::CheckForConfigChanges()
   // Notify the backend of the changes, if any.
   OnConfigChanged(changed_bits);
 
-  if (changed_bits & CONFIG_CHANGE_BIT_STEREO_MODE)
-  {
-    // OpenXR may have modified our backbuffer size.
-    ResizeSurface();
-  }
-
   // Framebuffer changed?
   if (changed_bits & (CONFIG_CHANGE_BIT_MULTISAMPLES | CONFIG_CHANGE_BIT_STEREO_MODE |
                       CONFIG_CHANGE_BIT_TARGET_SIZE))
@@ -479,8 +467,6 @@ void Renderer::CheckForConfigChanges()
     BPFunctions::SetViewport();
     BPFunctions::SetScissor();
   }
-
-  CheckOpenXRState();
 }
 
 // Create On-Screen-Messages
@@ -877,21 +863,6 @@ std::tuple<int, int> Renderer::CalculateOutputDimensions(int width, int height) 
   return std::make_tuple(width, height);
 }
 
-void Renderer::CheckOpenXRState()
-{
-  if (g_ActiveConfig.stereo_mode == StereoMode::OpenXR)
-  {
-    if (!m_openxr_session)
-    {
-      m_openxr_session = CreateOpenXRSession();
-    }
-  }
-  else
-  {
-    m_openxr_session = {};
-  }
-}
-
 void Renderer::CheckFifoRecording()
 {
   bool wasRecording = g_bRecordFifoData;
@@ -1282,17 +1253,6 @@ void Renderer::Swap(u32 xfb_addr, u32 fb_width, u32 fb_stride, u32 fb_height, u6
       if (!IsHeadless())
       {
         BindBackbuffer({{0.0f, 0.0f, 0.0f, 1.0f}});
-
-        if (m_openxr_session)
-        {
-          m_openxr_session->BeginFrame();
-
-          // Force backbufer size to swapchain size. There must be a cleaner way to do this.
-          const auto swapchain_size = m_openxr_session->GetSwapchainSize();
-          m_backbuffer_width = swapchain_size.width;
-          m_backbuffer_height = swapchain_size.height;
-        }
-
         UpdateDrawRectangle();
 
         // Adjust the source rectangle instead of using an oversized viewport to render the XFB.
@@ -1308,18 +1268,6 @@ void Renderer::Swap(u32 xfb_addr, u32 fb_width, u32 fb_stride, u32 fb_height, u6
         {
           std::lock_guard<std::mutex> guard(m_swap_mutex);
           PresentBackbuffer();
-        }
-
-        if (m_openxr_session)
-        {
-          m_openxr_session->ReleaseSwapchainImage();
-          m_openxr_session->EndFrame();
-
-          // If OpenXR session has been destroyed reset our pointer to stop tons of error logs.
-          if (!m_openxr_session->IsValid())
-          {
-            m_openxr_session = {};
-          }
         }
 
         // Update the window size based on the frame that was just rendered.

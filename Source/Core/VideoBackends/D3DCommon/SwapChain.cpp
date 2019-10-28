@@ -11,7 +11,6 @@
 #include "Common/CommonFuncs.h"
 #include "Common/Logging/Log.h"
 #include "Common/MsgHandler.h"
-#include "Common/OpenXR.h"
 #include "VideoCommon/VideoConfig.h"
 
 static bool IsTearingSupported(IDXGIFactory2* dxgi_factory)
@@ -48,7 +47,7 @@ SwapChain::~SwapChain()
 
 bool SwapChain::WantsStereo()
 {
-  return g_ActiveConfig.IsStereoModeSeparateBuffer();
+  return g_ActiveConfig.stereo_mode == StereoMode::QuadBuffer;
 }
 
 u32 SwapChain::GetSwapChainFlags() const
