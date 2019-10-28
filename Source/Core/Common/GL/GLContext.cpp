@@ -78,7 +78,7 @@ void* GLContext::GetFuncAddress(const std::string& name)
 
 std::unique_ptr<OpenXR::Session> GLContext::CreateOpenXRSession()
 {
-  return nullptr;
+  return {};
 }
 
 std::unique_ptr<GLContext> GLContext::Create(const WindowSystemInfo& wsi, bool stereo, bool core,

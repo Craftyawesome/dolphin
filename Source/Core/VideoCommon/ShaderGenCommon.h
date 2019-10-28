@@ -319,7 +319,6 @@ inline const char* GetInterpolationQualifier(bool msaa, bool ssaa,
 #define I_STEREOPARAMS "cstereo"
 #define I_LINEPTPARAMS "clinept"
 #define I_TEXOFFSET "ctexoffset"
-#define I_EYEVIEWS "ceyeviews"
 
 static const char s_shader_uniforms[] = "\tuint    components;\n"
                                         "\tuint    xfmem_dualTexInfo;\n"
