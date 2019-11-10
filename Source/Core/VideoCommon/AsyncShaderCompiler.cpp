@@ -6,6 +6,7 @@
 #include <thread>
 #include "Common/Assert.h"
 #include "Common/Logging/Log.h"
+#include "Common/ScopeGuard.h"
 #include "Common/Thread.h"
 
 #include "Core/Core.h"
@@ -79,7 +80,8 @@ bool AsyncShaderCompiler::WaitUntilCompletion(bool interruptable)
 }
 
 bool AsyncShaderCompiler::WaitUntilCompletion(
-    bool interruptable, const std::function<void(size_t, size_t)>& progress_callback)
+    bool interruptable, const std::function<void(size_t, size_t)>& progress_callback,
+    const std::function<void()>& completion_callback)
 {
   if (!HasPendingWork())
     return true;
@@ -103,6 +105,9 @@ bool AsyncShaderCompiler::WaitUntilCompletion(
     std::lock_guard<std::mutex> completed_guard(m_completed_work_lock);
     total_items = m_completed_work.size() + m_pending_work.size() + m_busy_workers.load() + 1;
   }
+
+  // At this point, completion callback should fire to eg. clear the screen
+  Common::ScopeGuard completion([&] { completion_callback(); });
 
   // Update progress while the compiles complete.
   for (;;)
