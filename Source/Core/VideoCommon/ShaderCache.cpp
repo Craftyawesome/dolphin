@@ -151,9 +151,13 @@ const AbstractPipeline* ShaderCache::GetUberPipelineForUid(const GXUberPipelineU
 
 void ShaderCache::WaitForAsyncCompiler()
 {
-  while (m_async_shader_compiler->HasPendingWork() || m_async_shader_compiler->HasCompletedWork())
+  bool running = true;
+
+  while (running &&
+         (m_async_shader_compiler->HasPendingWork() || m_async_shader_compiler->HasCompletedWork()))
   {
-    m_async_shader_compiler->WaitUntilCompletion([](size_t completed, size_t total) {
+    running = m_async_shader_compiler->WaitUntilCompletion(true, [](size_t completed,
+                                                                    size_t total) {
       g_renderer->BeginUIFrame();
 
       const float scale = ImGui::GetIO().DisplayFramebufferScale.x;
